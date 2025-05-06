@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="500" height="300" viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- 钥匙头部 -->
+  <circle cx="350" cy="100" r="40" fill="#3182CE" />
+  <circle cx="350" cy="100" r="25" fill="white" />
+  
+  <!-- 钥匙轴 -->
+  <rect x="150" y="85" width="200" height="30" fill="#3182CE" rx="10" ry="10" />
+  
+  <!-- 钥匙齿 -->
+  <rect x="150" y="90" width="15" height="60" fill="#3182CE" />
+  <rect x="180" y="90" width="15" height="40" fill="#3182CE" />
+  <rect x="210" y="90" width="15" height="50" fill="#3182CE" />
+  
+  <!-- 字母API -->
+  <text x="250" y="200" font-family="Arial" font-size="48" font-weight="bold" fill="#3182CE" text-anchor="middle">API KEY</text>
+  
+  <!-- 安全锁图标 -->
+  <rect x="235" y="220" width="30" height="25" fill="#4299E1" rx="5" ry="5" />
+  <rect x="230" y="220" width="40" height="15" fill="#4299E1" rx="5" ry="5" />
+  <circle cx="250" cy="232" r="5" fill="white" />
+</svg> 

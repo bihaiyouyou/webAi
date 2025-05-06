@@ -1,0 +1,19 @@
+name = "api-key-frontend"
+compatibility_date = "2024-09-23"
+
+[site]
+bucket = "./dist"
+
+[build]
+command = "npm run build"
+
+# 将 /api/* 路径路由到我们的Worker
+[[routes]]
+pattern = "/api/*"
+zone_name = "yourname.workers.dev"
+script_name = "api-key-system"
+
+# 主页与所有其他路径设置为SPA网页
+[[routes]]
+pattern = "/*"
+script = "index.html" 

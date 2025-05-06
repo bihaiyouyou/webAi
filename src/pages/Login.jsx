@@ -2,25 +2,27 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Box, Button, FormControl, FormLabel, Input, Heading,
-  useToast, Card, CardBody, CardHeader, Text, InputGroup, InputRightElement, IconButton
+  useToast, Card, CardBody, CardHeader, Text, InputGroup, InputRightElement, IconButton, Alert, AlertIcon
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
-import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 
 function Login() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
   const toast = useToast();
-  
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787/api';
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
     
-    if (!username || !password) {
+    if (!email || !password) {
+      setErrorMsg('请填写所有字段');
       toast({
         title: '请填写所有字段',
         status: 'error',
@@ -32,36 +34,34 @@ function Login() {
     setLoading(true);
     
     try {
-      const response = await axios.post(`${apiUrl}/auth/login`, {
-        username, 
-        password
+      console.log('提交登录表单...', {email});
+      
+      // 提示测试账号用法
+      if (!email.includes('@test.com')) {
+        console.log('提示：使用@test.com域名的邮箱可以模拟登录流程');
+      }
+      
+      const result = await login({ email, password });
+      console.log('登录成功:', result?.user?.email);
+      
+      toast({
+        title: '登录成功',
+        status: 'success',
+        duration: 2000,
       });
       
-      if (response.data.success) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        
-        toast({
-          title: '登录成功',
-          status: 'success',
-          duration: 2000,
-        });
-        
-        // 根据用户角色导航到不同页面
-        if (response.data.user.is_admin) {
-          navigate('/admin/dashboard');
-        } else {
-          navigate('/dashboard');
-        }
-      } else {
-        throw new Error(response.data.message || '登录失败');
-      }
+      // 登录成功后导航到仪表板
+      navigate('/dashboard');
     } catch (error) {
+      console.error('登录过程发生错误:', error);
+      const errorMessage = typeof error === 'string' ? error : (error?.message || '账号或密码错误');
+      setErrorMsg(errorMessage);
       toast({
         title: '登录失败',
-        description: error.response?.data?.message || error.message || '请检查用户名和密码',
+        description: errorMessage,
         status: 'error',
-        duration: 3000,
+        duration: 5000,
+        isClosable: true
       });
     } finally {
       setLoading(false);
@@ -75,13 +75,21 @@ function Login() {
           <Heading size="lg" textAlign="center">用户登录</Heading>
         </CardHeader>
         <CardBody>
+          {errorMsg && (
+            <Alert status="error" mb={4}>
+              <AlertIcon />
+              {errorMsg}
+            </Alert>
+          )}
+          
           <form onSubmit={handleSubmit}>
             <FormControl mb={4}>
-              <FormLabel>用户名</FormLabel>
+              <FormLabel>电子邮箱</FormLabel>
               <Input 
-                type="text" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="user@test.com可用于测试"
                 required
               />
             </FormControl>
