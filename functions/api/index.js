@@ -1,0 +1,1 @@
+export async function onRequest({request, env}) { const url = new URL(request.url); const path = url.pathname.replace(/^\/api/, ""); return env.API.fetch(new Request(new URL(path, "https://api"), request)); }
