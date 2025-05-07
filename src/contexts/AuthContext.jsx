@@ -1,6 +1,9 @@
 import { createContext, useState, useEffect, useContext } from 'react';
-import { AUTH_TOKEN_KEY, USER_DATA_KEY } from '../config';
+import { AUTH_TOKEN_KEY } from '../config';
 import apiService from '../services/api';
+
+// 用户数据本地存储键
+const USER_DATA_KEY = 'user_data';
 
 const AuthContext = createContext();
 

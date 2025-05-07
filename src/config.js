@@ -4,14 +4,21 @@ export const API_BASE_URL = 'https://apiworker.幻银超i.top';
 // 备用URL，如果主URL不可用
 export const FALLBACK_API_URL = 'https://api-key-system.8901530.workers.dev';
 
-// 认证配置
-export const AUTH_TOKEN_KEY = 'api_key_auth_token';
-export const USER_DATA_KEY = 'api_key_user_data';
+// 认证Token存储键
+export const AUTH_TOKEN_KEY = 'token';
 
 // 常量定义
 export const API_KEY_STATES = {
-  ACTIVE: true,
-  INACTIVE: false
+  ACTIVE: 'active',
+  INACTIVE: 'disabled'
+};
+
+// 计费计划
+export const BILLING_PLANS = {
+  FREE: 'free',
+  BASIC: 'basic',
+  PROFESSIONAL: 'professional',
+  ENTERPRISE: 'enterprise'
 };
 
 // 错误信息

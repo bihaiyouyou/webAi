@@ -17,9 +17,9 @@ If you are developing a production application, we recommend using TypeScript wi
 
 ## 系统架构
 
-- **前端**：React + Chakra UI
-- **后端**：Cloudflare Workers
-- **数据库**：Cloudflare D1 (SQLite)
+- **前端**：React + Chakra UI，部署在Cloudflare Pages
+- **后端**：Cloudflare Workers + D1数据库
+- **API路由**：使用自定义域名 `apiworker.幻银超i.top`
 
 ## 功能特性
 
@@ -44,6 +44,40 @@ npm run dev
 npm run build
 ```
 
+### 环境变量配置
+
+前端应用需要以下环境变量：
+
+1. 创建一个`.env`文件在前端项目根目录：
+
+```
+VITE_API_URL=https://apiworker.幻银超i.top
+```
+
+这个变量定义了API请求的基础URL。
+
+### 后端设置
+
+确保后端Worker正确配置：
+
+1. 网络连接问题：使用自定义域名 `apiworker.幻银超i.top` 访问Worker
+2. 数据库字段问题：确保表结构与代码一致
+3. CORS设置：允许前端域名的跨域请求
+
+### 最近修复的问题
+
+1. **API密钥生成按钮不可用**：
+   - 修复了API端点路径不匹配问题
+   - 添加了多端点尝试机制，提高兼容性
+
+2. **菜单栏未设置好**：
+   - 完善了侧边栏组件的实现
+   - 修复了布局样式
+
+3. **环境变量配置**：
+   - 统一了API基础URL配置
+   - 简化了本地存储键的使用
+
 ### 测试账号
 
 在开发模式下，可以使用以下方式快速测试：
@@ -53,41 +87,36 @@ npm run build
 
 系统会自动创建模拟用户数据，无需真实后端API。
 
-## 后端API
+## API端点
 
-后端已部署到Cloudflare Workers:
-- 生产环境: `https://api-key-worker.8901530.workers.dev`
-
-### API端点
+主要API端点包括：
 
 | 路径 | 方法 | 说明 | 认证 |
 |------|------|------|------|
-| `/auth/register` | POST | 用户注册 | 否 |
-| `/auth/login` | POST | 用户登录 | 否 |
-| `/api-keys` | GET | 获取所有API密钥 | 是 |
-| `/api-keys` | POST | 创建API密钥 | 是 |
-| `/api-keys/:id` | GET | 获取单个API密钥 | 是 |
-| `/api-keys/:id` | PATCH | 更新API密钥 | 是 |
-| `/api-keys/:id` | DELETE | 删除API密钥 | 是 |
-| `/stats` | GET | 获取使用统计 | 是 |
-| `/verify` | POST | 验证API密钥 | 否 |
+| `/api/auth/register` | POST | 用户注册 | 否 |
+| `/api/auth/login` | POST | 用户登录 | 否 |
+| `/api/keys` | GET | 获取API密钥列表 | 是 |
+| `/api/keys` | POST | 创建新API密钥 | 是 |
+| `/api/key/generate` | POST | 生成新API密钥(兼容端点) | 是 |
+| `/api/keys/:id` | GET | 获取单个API密钥 | 是 |
+| `/api/keys/:id` | PATCH | 更新API密钥 | 是 |
+| `/api/keys/:id` | DELETE | 删除API密钥 | 是 |
+| `/api/stats` | GET | 获取使用统计 | 是 |
 
-## 问题排查
+## 部署
 
-### 连接问题
+已成功部署在Cloudflare Pages上：
+- 前端URL: https://3cfd32ed.webai-d8o.pages.dev
+- 后端URL: https://apiworker.幻银超i.top
 
-如果遇到API连接问题，可能是由于以下原因：
+## 故障排除
 
-1. CORS限制 - 检查浏览器控制台
-2. 网络连接 - 确保能访问Cloudflare服务
-3. API服务不可用 - 使用`@test.com`邮箱进行模拟测试
+如果遇到问题，请检查：
 
-### 本地开发
-
-如果需要在无网络环境开发，请使用以下方法启用模拟API:
-
-1. 创建`.env.local`文件并添加`VITE_MOCK_API=true`
-2. 重启开发服务器
+1. 控制台错误日志
+2. 网络请求响应
+3. 环境变量是否正确设置
+4. Cloudflare Pages和Workers服务是否正常运行
 
 ## 项目结构
 

@@ -3,11 +3,12 @@ import {
   Box, Heading, Button, Card, CardBody, Text, Flex,
   Table, Thead, Tbody, Tr, Th, Td, Badge, IconButton,
   useToast, useDisclosure, Modal, ModalOverlay, ModalContent,
-  ModalHeader, ModalBody, ModalFooter, Input, useClipboard, Tooltip
+  ModalHeader, ModalBody, ModalFooter, Input, Tooltip, Spinner
 } from '@chakra-ui/react';
 import { CopyIcon, DeleteIcon, RepeatIcon, CheckIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 
 function ApiKeys() {
   const [apiKeys, setApiKeys] = useState([]);
@@ -17,7 +18,8 @@ function ApiKeys() {
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
   
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787/api';
+  // 使用config.js中的配置
+  const apiUrl = API_BASE_URL;
   
   const fetchApiKeys = async () => {
     setLoading(true);
@@ -30,23 +32,48 @@ function ApiKeys() {
         return;
       }
       
-      const response = await axios.get(`${apiUrl}/key/list`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      // 尝试两种可能的API路径
+      const endpoints = [
+        `${apiUrl}/api/keys`,
+        `${apiUrl}/api/key/list`
+      ];
       
-      if (response.data.success) {
-        setApiKeys(response.data.keys || []);
+      let response;
+      let succeeded = false;
+      
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`尝试从 ${endpoint} 获取API密钥`);
+          response = await axios.get(endpoint, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          
+          if (response.data && (response.data.success || response.data.length > 0)) {
+            succeeded = true;
+            break;
+          }
+        } catch (err) {
+          console.log(`尝试 ${endpoint} 失败:`, err.message);
+          continue;
+        }
+      }
+      
+      if (succeeded) {
+        // 根据响应格式处理数据
+        const keys = response.data.keys || response.data || [];
+        setApiKeys(Array.isArray(keys) ? keys : []);
+        console.log('成功获取API密钥:', keys);
       } else {
-        throw new Error(response.data.message || '获取API密钥失败');
+        throw new Error('无法从任何端点获取API密钥');
       }
     } catch (error) {
       console.error('API keys error:', error);
       
       toast({
         title: '获取API密钥失败',
-        description: error.response?.data?.message || error.message || '请稍后再试',
+        description: error.message || '请稍后再试',
         status: 'error',
         duration: 3000,
       });
@@ -72,25 +99,56 @@ function ApiKeys() {
         return;
       }
       
-      const response = await axios.post(`${apiUrl}/key/generate`, {}, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      // 尝试多个可能的端点
+      const endpoints = [
+        `${apiUrl}/api/keys`,
+        `${apiUrl}/api/key/generate`
+      ];
       
-      if (response.data.success) {
-        setNewKey(response.data.api_key);
-        onOpen();
-        fetchApiKeys();
+      let response;
+      let succeeded = false;
+      
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`尝试调用 ${endpoint} 生成API密钥`);
+          response = await axios.post(endpoint, 
+            { name: `API密钥 ${new Date().toLocaleDateString()}` },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`
+              }
+            });
+          
+          if (response.data && (response.data.success || response.data.key || response.data.api_key)) {
+            succeeded = true;
+            break;
+          }
+        } catch (err) {
+          console.log(`尝试 ${endpoint} 失败:`, err.message);
+          continue;
+        }
+      }
+      
+      if (succeeded) {
+        // 提取API密钥（处理不同响应格式）
+        const apiKey = response.data.api_key || response.data.key || (response.data.prefix && response.data.key ? `${response.data.prefix}.${response.data.key}` : null);
+        
+        if (apiKey) {
+          setNewKey(apiKey);
+          onOpen();
+          fetchApiKeys();
+        } else {
+          throw new Error('API响应中没有密钥');
+        }
       } else {
-        throw new Error(response.data.message || '生成API密钥失败');
+        throw new Error('无法生成API密钥');
       }
     } catch (error) {
       console.error('Generate API key error:', error);
       
       toast({
         title: '生成API密钥失败',
-        description: error.response?.data?.message || error.message || '请稍后再试',
+        description: error.message || '请稍后再试',
         status: 'error',
         duration: 3000,
       });
@@ -108,16 +166,46 @@ function ApiKeys() {
       
       const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
       
-      const response = await axios.post(`${apiUrl}/key/toggle-status`, {
-        key_id: keyId,
-        status: newStatus
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      // 尝试两个可能的端点
+      const endpoints = [
+        `${apiUrl}/api/keys/${keyId}`,
+        `${apiUrl}/api/key/toggle-status`
+      ];
       
-      if (response.data.success) {
+      let response;
+      let succeeded = false;
+      
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`尝试调用 ${endpoint} 更新密钥状态`);
+          
+          // 根据端点调整请求方法和数据
+          if (endpoint.includes('/toggle-status')) {
+            response = await axios.post(endpoint, {
+              key_id: keyId,
+              status: newStatus
+            }, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+          } else {
+            response = await axios.patch(endpoint, {
+              active: newStatus === 'active'
+            }, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+          }
+          
+          if (response.data && (response.data.success || response.data.message)) {
+            succeeded = true;
+            break;
+          }
+        } catch (err) {
+          console.log(`尝试 ${endpoint} 失败:`, err.message);
+          continue;
+        }
+      }
+      
+      if (succeeded) {
         fetchApiKeys();
         
         toast({
@@ -126,14 +214,14 @@ function ApiKeys() {
           duration: 2000,
         });
       } else {
-        throw new Error(response.data.message || '更新API密钥状态失败');
+        throw new Error('无法更新API密钥状态');
       }
     } catch (error) {
       console.error('Toggle API key status error:', error);
       
       toast({
         title: '更新API密钥状态失败',
-        description: error.response?.data?.message || error.message || '请稍后再试',
+        description: error.message || '请稍后再试',
         status: 'error',
         duration: 3000,
       });
@@ -205,7 +293,9 @@ function ApiKeys() {
           <Heading size="md" mb={4}>我的API密钥</Heading>
           
           {loading ? (
-            <Text>加载中...</Text>
+            <Flex justify="center" py={10}>
+              <Spinner size="xl" />
+            </Flex>
           ) : apiKeys.length === 0 ? (
             <Text>您还没有API密钥。点击"生成新密钥"按钮创建一个。</Text>
           ) : (
@@ -248,17 +338,19 @@ function ApiKeys() {
                     <Td>{new Date(key.created_at).toLocaleString()}</Td>
                     <Td>
                       {key.last_used_at 
-                        ? new Date(key.last_used_at).toLocaleString() 
-                        : '从未使用'}
+                        ? new Date(key.last_used_at).toLocaleString()
+                        : '从未使用'
+                      }
                     </Td>
                     <Td>
-                      <Button
-                        size="sm"
-                        colorScheme={key.status === 'active' ? 'red' : 'green'}
+                      <IconButton
+                        icon={<DeleteIcon />}
+                        colorScheme="red"
+                        variant="ghost"
                         onClick={() => toggleKeyStatus(key.id, key.status)}
-                      >
-                        {key.status === 'active' ? '禁用' : '启用'}
-                      </Button>
+                        aria-label={key.status === 'active' ? '禁用' : '启用'}
+                        title={key.status === 'active' ? '禁用' : '启用'}
+                      />
                     </Td>
                   </Tr>
                 ))}
@@ -268,7 +360,6 @@ function ApiKeys() {
         </CardBody>
       </Card>
       
-      {/* 新API密钥弹窗 */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
