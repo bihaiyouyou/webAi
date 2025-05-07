@@ -1,7 +1,7 @@
-import { API_BASE_URL, API_FALLBACK_URL, AUTH_TOKEN_KEY } from '../config';
+import { API_BASE_URL, FALLBACK_API_URL, AUTH_TOKEN_KEY } from '../config';
 
-// 优先使用本地API路径实现Pages与Workers整合
-const API_URL = import.meta.env.PROD ? API_FALLBACK_URL : API_BASE_URL;
+// 优先使用自定义域名，备用方案是workers.dev域名
+const API_URL = API_BASE_URL;
 
 // 获取认证令牌
 const getToken = () => localStorage.getItem(AUTH_TOKEN_KEY);
@@ -45,7 +45,7 @@ const apiService = {
     register: async (userData) => {
       try {
         console.log('注册请求数据:', userData);
-        const response = await fetch(`${API_URL}/auth/register`, createOptions('POST', userData, false));
+        const response = await fetch(`${API_URL}/api/auth/register`, createOptions('POST', userData, false));
         return await handleResponse(response);
       } catch (error) {
         console.error('注册请求失败:', error);
@@ -55,7 +55,7 @@ const apiService = {
     
     login: async (credentials) => {
       try {
-        const response = await fetch(`${API_URL}/auth/login`, createOptions('POST', credentials, false));
+        const response = await fetch(`${API_URL}/api/auth/login`, createOptions('POST', credentials, false));
         return await handleResponse(response);
       } catch (error) {
         console.error('登录请求失败:', error);
@@ -67,36 +67,36 @@ const apiService = {
   // API密钥管理
   apiKeys: {
     getAll: () => 
-      fetch(`${API_URL}/api-keys`, createOptions('GET'))
+      fetch(`${API_URL}/api/keys`, createOptions('GET'))
         .then(handleResponse),
     
     create: (name) => 
-      fetch(`${API_URL}/api-keys`, createOptions('POST', { name }))
+      fetch(`${API_URL}/api/keys`, createOptions('POST', { name }))
         .then(handleResponse),
     
     getById: (id) => 
-      fetch(`${API_URL}/api-keys/${id}`, createOptions('GET'))
+      fetch(`${API_URL}/api/keys/${id}`, createOptions('GET'))
         .then(handleResponse),
     
     update: (id, data) => 
-      fetch(`${API_URL}/api-keys/${id}`, createOptions('PATCH', data))
+      fetch(`${API_URL}/api/keys/${id}`, createOptions('PATCH', data))
         .then(handleResponse),
     
     delete: (id) => 
-      fetch(`${API_URL}/api-keys/${id}`, createOptions('DELETE'))
+      fetch(`${API_URL}/api/keys/${id}`, createOptions('DELETE'))
         .then(handleResponse)
   },
   
   // 使用统计
   stats: {
     getAll: () => 
-      fetch(`${API_URL}/stats`, createOptions('GET'))
+      fetch(`${API_URL}/api/stats`, createOptions('GET'))
         .then(handleResponse)
   },
   
   // 验证API密钥（无需认证的公共API）
   verify: (apiKey) => 
-    fetch(`${API_URL}/verify`, createOptions('POST', { apiKey }, false))
+    fetch(`${API_URL}/api/verify`, createOptions('POST', { apiKey }, false))
       .then(handleResponse)
 };
 

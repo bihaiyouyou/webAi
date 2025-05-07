@@ -7,13 +7,7 @@ bucket = "./dist"
 [build]
 command = "npm run build"
 
-# 将 /api/* 路径路由到我们的Worker
-[[routes]]
-pattern = "/api/*"
-zone_name = "yourname.workers.dev"
-script_name = "api-key-system"
-
-# 主页与所有其他路径设置为SPA网页
-[[routes]]
-pattern = "/*"
-script = "index.html" 
+# 使用绑定连接Worker
+[[services.bindings]]
+name = "API"
+service = "api-key-system" 

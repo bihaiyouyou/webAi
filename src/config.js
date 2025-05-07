@@ -1,6 +1,8 @@
-// API基础配置
-export const API_BASE_URL = 'https://api-key-system.8901530.workers.dev';
-export const API_FALLBACK_URL = '/api'; // 备用URL用于Pages与Workers整合
+// API配置文件
+export const API_BASE_URL = 'https://apiworker.幻银超i.top';
+
+// 备用URL，如果主URL不可用
+export const FALLBACK_API_URL = 'https://api-key-system.8901530.workers.dev';
 
 // 认证配置
 export const AUTH_TOKEN_KEY = 'api_key_auth_token';
